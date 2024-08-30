@@ -1,50 +1,65 @@
-# Welcome to your Expo app 👋
+# 麻雀点数計算アプリ
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+このプロジェクトは、麻雀の点数計算を簡単に行うためのモバイルアプリケーションです。
 
-## Get started
+## 機能
 
-1. Install dependencies
+- 自風、局、本場の設定
+- ドラ、裏ドラの入力
+- 立直、ダブル立直の選択
+- ツモ、ロンの選択
+- 特殊和了の選択（一発、槍槓、嶺上開花など）
+- 手牌、和了牌、鳴き牌の入力
+- 点数計算機能
 
-   ```bash
+## 技術スタック
+
+- React Native
+- Expo
+- React Native Paper
+
+## セットアップ方法
+
+1. リポジトリをクローンします：
+
+   ```
+   git clone https://github.com/yourusername/mahjong-points-calculator.git
+   ```
+
+2. プロジェクトディレクトリに移動します：
+
+   ```
+   cd mahjong-points-calculator
+   ```
+
+3. 依存関係をインストールします：
+
+   ```
    npm install
    ```
 
-2. Start the app
+4. アプリを起動します：
 
-   ```bash
-    npx expo start
+   ```
+   npm run web
+   または
+   npm run android
    ```
 
-In the output, you'll find options to open the app in a
+5. [http://localhost:8081/](http://localhost:8081/) にアクセスします。
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## 使用方法
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+1. アプリを起動し、各項目を入力します。
+2. 全ての情報を入力したら、「計算」ボタンをタップします。
+3. 計算結果が表示されます。
 
-## Get a fresh project
+## 貢献
 
-When you're ready, run:
+バグの報告や新機能の提案は、Issueを作成してください。
+プルリクエストも歓迎します。
 
-```bash
-npm run reset-project
-```
+## ライセンス
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+このプロジェクトはMITライセンスの下で公開されています。
+詳細は[LICENSE](LICENSE)ファイルをご覧ください。
