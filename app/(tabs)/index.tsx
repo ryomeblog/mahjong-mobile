@@ -22,17 +22,22 @@ export default function App() {
   const [zhuangfeng, setZhuangfeng] = useState("0");
   const [menfeng, setMenfeng] = useState("0");
   const [lizhi, setLizhi] = useState("0");
+  const [tsumo, setTsumo] = useState(false);
   const [yifa, setYifa] = useState(false);
   const [qianggang, setQianggang] = useState(false);
   const [lingshang, setLingshang] = useState(false);
   const [haidi, setHaidi] = useState("0");
   const [tianhu, setTianhu] = useState("0");
-  const [baopai, setBaopai] = useState("");
-  const [fubaopai, setFubaopai] = useState("");
+  const [baopai, setBaopai] = useState([]);
+  const [fubaopai, setFubaopai] = useState([]);
   const [changbang, setChangbang] = useState("0");
   const [lizhibang, setLizhibang] = useState("0");
   const [shoupai, setShoupai] = useState("");
-  const [naki, setNaki] = useState(["", "", "", ""]);
+  const [rongpai, setRongpai] = useState("");
+  const [naki1, setNaki1] = useState("");
+  const [naki2, setNaki2] = useState("");
+  const [naki3, setNaki3] = useState("");
+  const [naki4, setNaki4] = useState("");
 
   const [visible, setVisible] = useState(false);
   const [modalContent, setModalContent] = useState(null);
@@ -47,14 +52,18 @@ export default function App() {
       lingshang,
       haidi,
       tianhu,
-      baopai: baopai.split(","),
-      fubaopai: fubaopai.split(","),
+      baopai,
+      fubaopai,
       changbang: parseInt(changbang, 10),
       lizhibang: parseInt(lizhibang, 10),
       shoupai,
-      naki,
+      naki1,
+      naki2,
+      naki3,
+      naki4,
     };
     console.log(data);
+    console.log(JSON.stringify(data));
   };
 
   const openModal = (content) => {
@@ -105,14 +114,124 @@ export default function App() {
   );
 
   const renderTileImages = (tiles) => {
-    return generateImageUrls(tiles).map((url, index) => {
+    return generateTileAndImageUrls(tiles).map((tileAndUrls, index) => {
       return (
-        <Image key={index} source={{ uri: url }} style={styles.tileImage} />
+        <Image
+          key={index}
+          source={{ uri: tileAndUrls.imageUrl }}
+          style={styles.tileImage}
+        />
       );
     });
   };
 
+  const renderDoraImages = (tiles) => {
+    return generateTileAndImageUrls(groupTiles(tiles.join(""))).map(
+      (tileAndUrls, index) => {
+        return (
+          <Image
+            key={index}
+            source={{ uri: tileAndUrls.imageUrl }}
+            style={styles.tileImage}
+          />
+        );
+      }
+    );
+  };
+
   const renderTileSelection = (setter) => {
+    const tiles = [
+      "m1",
+      "m2",
+      "m3",
+      "m4",
+      "m5",
+      "m6",
+      "m7",
+      "m8",
+      "m9",
+      "p1",
+      "p2",
+      "p3",
+      "p4",
+      "p5",
+      "p6",
+      "p7",
+      "p8",
+      "p9",
+      "s1",
+      "s2",
+      "s3",
+      "s4",
+      "s5",
+      "s6",
+      "s7",
+      "s8",
+      "s9",
+      "z1",
+      "z2",
+      "z3",
+      "z4",
+      "z5",
+      "z6",
+      "z7",
+      "m0",
+      "p0",
+      "s0",
+    ];
+    return (
+      <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+        <View style={styles.handContainer}>
+          <Text style={styles.selectText}>手牌</Text>
+          <Text style={styles.selectText}>{shoupai}</Text>
+          <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+            {generateTileAndImageUrls(shoupai).map((tileAndUrls, index) => {
+              return (
+                <TouchableOpacity
+                  key={index}
+                  onPress={() => {
+                    setter((prev) =>
+                      prev ? removeTile(prev, tileAndUrls.tile) : ""
+                    );
+                  }}
+                >
+                  <Image
+                    key={index}
+                    source={{ uri: tileAndUrls.imageUrl }}
+                    style={styles.tileImage}
+                  />
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+        <View style={styles.tilesContainer}>
+          <Text style={styles.selectText}>牌</Text>
+          <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+            {tiles.map((tile, index) => {
+              return (
+                <TouchableOpacity
+                  key={index}
+                  onPress={() => {
+                    setter((prev) =>
+                      prev ? groupTiles(`${prev}${tile}`) : tile
+                    );
+                  }}
+                >
+                  <Image
+                    source={{ uri: `../assets/images/${tile}.png` }}
+                    style={styles.tileImage}
+                  />
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+      </View>
+    );
+  };
+
+  const renderDraSelection = (setter) => {
     const tiles = [
       "m1",
       "m2",
@@ -159,13 +278,116 @@ export default function App() {
           <Text style={styles.selectText}>手牌</Text>
           <Text style={styles.selectText}>{shoupai}</Text>
           <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
-            {generateImageUrls(shoupai).map((url, index) => {
+            {generateTileAndImageUrls(shoupai).map((tileAndUrls, index) => {
               return (
-                <Image
+                <TouchableOpacity
                   key={index}
-                  source={{ uri: url }}
-                  style={styles.tileImage}
-                />
+                  onPress={() => {
+                    setter((prev) => {
+                      if (prev) return prev;
+                      const removeIndex = prev.indexOf(tileAndUrls.tile);
+                      if (removeIndex !== -1)
+                        return prev.splice(removeIndex, 1);
+                      return prev;
+                    });
+                  }}
+                >
+                  <Image
+                    key={index}
+                    source={{ uri: tileAndUrls.imageUrl }}
+                    style={styles.tileImage}
+                  />
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+        <View style={styles.tilesContainer}>
+          <Text style={styles.selectText}>牌</Text>
+          <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+            {tiles.map((tile, index) => {
+              return (
+                <TouchableOpacity
+                  key={index}
+                  onPress={() => {
+                    setter((prev) => [...prev, tile]);
+                  }}
+                >
+                  <Image
+                    source={{ uri: `../assets/images/${tile}.png` }}
+                    style={styles.tileImage}
+                  />
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+      </View>
+    );
+  };
+
+  const renderNakiSelection = (setter) => {
+    const tiles = [
+      "m1",
+      "m2",
+      "m3",
+      "m4",
+      "m5",
+      "m6",
+      "m7",
+      "m8",
+      "m9",
+      "p1",
+      "p2",
+      "p3",
+      "p4",
+      "p5",
+      "p6",
+      "p7",
+      "p8",
+      "p9",
+      "s1",
+      "s2",
+      "s3",
+      "s4",
+      "s5",
+      "s6",
+      "s7",
+      "s8",
+      "s9",
+      "z1",
+      "z2",
+      "z3",
+      "z4",
+      "z5",
+      "z6",
+      "z7",
+      "m0",
+      "p0",
+      "s0",
+    ];
+    return (
+      <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+        <View style={styles.handContainer}>
+          <Text style={styles.selectText}>鳴き牌</Text>
+          <Text style={styles.selectText}>{shoupai}</Text>
+          <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+            {generateTileAndImageUrls(shoupai).map((tileAndUrls, index) => {
+              return (
+                <TouchableOpacity
+                  key={index}
+                  onPress={() => {
+                    setter((prev) =>
+                      prev ? removeTile(prev, tileAndUrls.tile) : ""
+                    );
+                  }}
+                >
+                  <Image
+                    key={index}
+                    source={{ uri: tileAndUrls.imageUrl }}
+                    style={styles.tileImage}
+                  />
+                </TouchableOpacity>
               );
             })}
           </View>
@@ -179,7 +401,11 @@ export default function App() {
                   key={index}
                   onPress={() => {
                     setter((prev) =>
-                      prev ? groupTiles(`${prev}${tile}`) : tile
+                      prev
+                        ? prev.length === 3
+                          ? groupTiles(`${prev}${tile}`) + "-"
+                          : groupTiles(`${prev}${tile}`)
+                        : tile
                     );
                   }}
                 >
@@ -195,6 +421,40 @@ export default function App() {
       </View>
     );
   };
+
+  function removeTile(tiles, tile) {
+    const group = tile[0]; // グループを判断するための先頭文字
+    const numberToRemove = tile[1]; // 削除する数字
+
+    // グループを見つけるための正規表現
+    const regex = new RegExp(`${group}[0-9]+`);
+    const match = tiles.match(regex);
+
+    if (match) {
+      // グループ内の数字を取得
+      let groupNumbers = match[0].slice(1).split("");
+
+      // 削除する数字を一つだけ取り除く
+      const index = groupNumbers.indexOf(numberToRemove);
+      if (index !== -1) {
+        groupNumbers.splice(index, 1);
+      }
+
+      // 新しいグループ文字列を作成
+      let newGroup = group + groupNumbers.join("");
+
+      // グループが空になった場合、先頭の英字も削除
+      if (newGroup === group) {
+        newGroup = "";
+      }
+
+      // 元の文字列のグループを新しいグループに置き換える
+      return tiles.replace(match[0], newGroup);
+    }
+
+    // グループが見つからなかった場合は元の文字列を返す
+    return tiles;
+  }
 
   function groupTiles(tiles) {
     const groups = { m: [], p: [], s: [], z: [] };
@@ -226,7 +486,7 @@ export default function App() {
     return result;
   }
 
-  function generateImageUrls(tiles) {
+  function generateTileAndImageUrls(tiles) {
     const groups = { m: [], p: [], s: [], z: [] };
 
     // 文字列を解析してグループに追加
@@ -245,14 +505,17 @@ export default function App() {
     }
 
     // 画像URLを生成
-    const urls = [];
+    const tileAndUrls = [];
     for (const group in groups) {
       groups[group].forEach((number) => {
-        urls.push(`../assets/images/${group}${number}.png`);
+        tileAndUrls.push({
+          tile: `${group}${number}`,
+          imageUrl: `../assets/images/${group}${number}.png`,
+        });
       });
     }
 
-    return urls;
+    return tileAndUrls;
   }
 
   const styles = StyleSheet.create({
@@ -360,10 +623,10 @@ export default function App() {
               ["リーチなし", "リーチ", "ダブルリーチ"]
             )}
 
+            {renderCheckboxItem("ツモ", tsumo, setTsumo)}
             {renderCheckboxItem("リーチ一発", yifa, setYifa)}
-            {renderCheckboxItem("槍槓", qianggang, setQianggang)}
             {renderCheckboxItem("嶺上開花", lingshang, setLingshang)}
-
+            {renderCheckboxItem("槍槓", qianggang, setQianggang)}
             {renderSelectableField(
               "海底撈月",
               haidi,
@@ -379,38 +642,39 @@ export default function App() {
               ["天和/地和なし", "天和", "地和"]
             )}
 
-            <TextInput
-              label="ドラ"
-              value={baopai}
-              onChangeText={(text) => setBaopai(text)}
-              placeholder="例: m1,p2,s3,z4"
-              style={styles.textInput}
-              contentStyle={{ color: "black" }}
-            />
-            <TextInput
-              label="裏ドラ"
-              value={fubaopai}
-              onChangeText={(text) => setFubaopai(text)}
-              placeholder="例: m1,p2,s3,z4"
-              style={styles.textInput}
-              contentStyle={{ color: "black" }}
-            />
-            <TextInput
-              label="本場"
-              value={changbang}
-              onChangeText={(text) => setChangbang(text)}
-              keyboardType="numeric"
-              style={styles.textInput}
-              contentStyle={{ color: "black" }}
-            />
-            <TextInput
-              label="リーチ棒"
-              value={lizhibang}
-              onChangeText={(text) => setLizhibang(text)}
-              keyboardType="numeric"
-              style={styles.textInput}
-              contentStyle={{ color: "black" }}
-            />
+            <TouchableOpacity
+              onPress={() =>
+                openModal(
+                  <View>
+                    <Text style={styles.modalText}>ドラを選択してください</Text>
+                    {renderDraSelection(setBaopai)}
+                  </View>
+                )
+              }
+            >
+              <Text style={styles.selectText}>ドラ: {baopai}</Text>
+              <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+                {renderDoraImages(baopai)}
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={() =>
+                openModal(
+                  <View>
+                    <Text style={styles.modalText}>
+                      裏ドラを選択してください
+                    </Text>
+                    {renderDraSelection(setFubaopai)}
+                  </View>
+                )
+              }
+            >
+              <Text style={styles.selectText}>裏ドラ: {fubaopai}</Text>
+              <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+                {renderDoraImages(fubaopai)}
+              </View>
+            </TouchableOpacity>
 
             <TouchableOpacity
               onPress={() =>
@@ -428,32 +692,118 @@ export default function App() {
               </View>
             </TouchableOpacity>
 
-            {/* {naki.map((nakiPai, index) => (
+            <TouchableOpacity
+              onPress={() =>
+                openModal(
+                  <View>
+                    <Text style={styles.modalText}>
+                      鳴き牌1を選択してください
+                    </Text>
+                    {renderNakiSelection(setNaki1)}
+                  </View>
+                )
+              }
+            >
+              <Text style={styles.selectText}>鳴き牌1: {naki1}</Text>
+              <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+                {renderTileImages(naki1)}
+              </View>
+            </TouchableOpacity>
+
+            {naki1 && (
               <TouchableOpacity
-                key={index}
                 onPress={() =>
                   openModal(
                     <View>
                       <Text style={styles.modalText}>
-                        鳴き牌 {index + 1} を選択してください
+                        鳴き牌2を選択してください
                       </Text>
-                      {renderTileSelection((text) => {
-                        const newNaki = [...naki];
-                        newNaki[index] = text;
-                        setNaki(newNaki);
-                      })}
+                      {renderNakiSelection(setNaki2)}
                     </View>
                   )
                 }
               >
-                <Text style={styles.selectText}>
-                  鳴き牌 {index + 1}: {nakiPai}
-                </Text>
+                <Text style={styles.selectText}>鳴き牌2: {naki2}</Text>
                 <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
-                  {renderTileImages(nakiPai)}
+                  {renderTileImages(naki2)}
                 </View>
               </TouchableOpacity>
-            ))} */}
+            )}
+
+            {naki2 && (
+              <TouchableOpacity
+                onPress={() =>
+                  openModal(
+                    <View>
+                      <Text style={styles.modalText}>
+                        鳴き牌3を選択してください
+                      </Text>
+                      {renderNakiSelection(setNaki3)}
+                    </View>
+                  )
+                }
+              >
+                <Text style={styles.selectText}>鳴き牌3: {naki3}</Text>
+                <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+                  {renderTileImages(naki3)}
+                </View>
+              </TouchableOpacity>
+            )}
+
+            {naki3 && (
+              <TouchableOpacity
+                onPress={() =>
+                  openModal(
+                    <View>
+                      <Text style={styles.modalText}>
+                        鳴き牌4を選択してください
+                      </Text>
+                      {renderNakiSelection(setNaki4)}
+                    </View>
+                  )
+                }
+              >
+                <Text style={styles.selectText}>鳴き牌5: {naki5}</Text>
+                <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+                  {renderTileImages(naki4)}
+                </View>
+              </TouchableOpacity>
+            )}
+
+            <TouchableOpacity
+              onPress={() =>
+                openModal(
+                  <View>
+                    <Text style={styles.modalText}>
+                      アガリ牌を選択してください
+                    </Text>
+                    {renderTileSelection(setRongpai)}
+                  </View>
+                )
+              }
+            >
+              <Text style={styles.selectText}>アガリ牌: {rongpai}</Text>
+              <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+                {renderTileImages(rongpai)}
+              </View>
+            </TouchableOpacity>
+
+            <TextInput
+              label="本場"
+              value={changbang}
+              onChangeText={(text) => setChangbang(text)}
+              keyboardType="numeric"
+              style={styles.textInput}
+              contentStyle={{ color: "black" }}
+            />
+            <TextInput
+              label="リーチ棒"
+              value={lizhibang}
+              onChangeText={(text) => setLizhibang(text)}
+              keyboardType="numeric"
+              style={styles.textInput}
+              contentStyle={{ color: "black" }}
+            />
 
             <Button
               mode="contained"
