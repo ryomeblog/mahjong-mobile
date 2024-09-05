@@ -1,280 +1,486 @@
-import React, { useState } from "react";
-import { ScrollView, View } from "react-native";
+import React, { useState, useEffect } from "react";
+import {
+  SafeAreaView,
+  ScrollView,
+  View,
+  StyleSheet,
+  Modal,
+  TouchableOpacity,
+  Image,
+} from "react-native";
 import {
   TextInput,
   Button,
-  Text,
-  Title,
-  Menu,
-  Provider,
-  Checkbox,
   RadioButton,
+  Checkbox,
+  Text,
+  Portal,
+  Provider,
 } from "react-native-paper";
 
-const styles = {
-  textStyle: { color: "black" },
-  mahjongTilesStyle: { fontSize: 24, color: "black" },
-  selectMahjongTilesStyle: { fontSize: 24, color: "white" },
-};
+export default function App() {
+  const [zhuangfeng, setZhuangfeng] = useState("0");
+  const [menfeng, setMenfeng] = useState("0");
+  const [lizhi, setLizhi] = useState("0");
+  const [yifa, setYifa] = useState(false);
+  const [qianggang, setQianggang] = useState(false);
+  const [lingshang, setLingshang] = useState(false);
+  const [haidi, setHaidi] = useState("0");
+  const [tianhu, setTianhu] = useState("0");
+  const [baopai, setBaopai] = useState("");
+  const [fubaopai, setFubaopai] = useState("");
+  const [changbang, setChangbang] = useState("0");
+  const [lizhibang, setLizhibang] = useState("0");
+  const [shoupai, setShoupai] = useState("");
+  const [naki, setNaki] = useState(["", "", "", ""]);
 
-const mahjongTiles = [
-  "🀇",
-  "🀈",
-  "🀉",
-  "🀊",
-  "🀋",
-  "🀌",
-  "🀍",
-  "🀎",
-  "🀏",
-  "🀐",
-  "🀑",
-  "🀒",
-  "🀓",
-  "🀔",
-  "🀕",
-  "🀖",
-  "🀗",
-  "🀘",
-  "🀙",
-  "🀚",
-  "🀛",
-  "🀜",
-  "🀝",
-  "🀞",
-  "🀟",
-  "🀠",
-  "🀡",
-  "🀀",
-  "🀁",
-  "🀂",
-  "🀃",
-  "🀆",
-  "🀅",
-  "中",
-];
-const specialWins = [
-  "一発",
-  "槍槓",
-  "嶺上開花",
-  "海底撈月",
-  "河底撈魚",
-  "地和",
-  "天和",
-];
-const winds = ["東", "南", "西", "北"];
-const riichiOptions = [
-  { label: "立直なし", value: "none" },
-  { label: "立直", value: "riichi" },
-  { label: "W立直", value: "doubleRiichi" },
-];
-const winTypes = [
-  { label: "ツモ", value: "tsumo" },
-  { label: "ロン", value: "ron" },
-];
+  const [visible, setVisible] = useState(false);
+  const [modalContent, setModalContent] = useState(null);
 
-const MahjongForm = () => {
-  const [formData, setFormData] = useState({
-    round: "",
-    wind: "",
-    dora: Array(4).fill(""),
-    uraDora: Array(4).fill(""),
-    riichi: "none",
-    winType: "tsumo",
-    specialWin: [],
-    honba: "",
-    handTiles: Array(13).fill(""),
-    winningTile: "",
-    melds: Array(4).fill(Array(3).fill("")),
-  });
-
-  const [menuVisibility, setMenuVisibility] = useState({
-    dora: Array(4).fill(false),
-    uraDora: Array(4).fill(false),
-    handTiles: Array(13).fill(false),
-    winningTile: false,
-    melds: Array(4).fill(Array(3).fill(false)),
-  });
-
-  const updateFormData = (field, value, index = null, subIndex = null) => {
-    setFormData((prev) => {
-      const newData = { ...prev };
-      if (index !== null) {
-        newData[field] = [...prev[field]];
-        if (subIndex !== null) {
-          newData[field][index] = [...prev[field][index]];
-          newData[field][index][subIndex] = value;
-        } else {
-          newData[field][index] = value;
-        }
-      } else {
-        newData[field] = value;
-      }
-      return newData;
-    });
+  const handleCalculate = () => {
+    const data = {
+      zhuangfeng,
+      menfeng,
+      lizhi,
+      yifa,
+      qianggang,
+      lingshang,
+      haidi,
+      tianhu,
+      baopai: baopai.split(","),
+      fubaopai: fubaopai.split(","),
+      changbang: parseInt(changbang, 10),
+      lizhibang: parseInt(lizhibang, 10),
+      shoupai,
+      naki,
+    };
+    console.log(data);
   };
 
-  const toggleMenu = (field, index = null, subIndex = null) => {
-    setMenuVisibility((prev) => {
-      const newVisibility = { ...prev };
-      if (index !== null) {
-        newVisibility[field] = [...prev[field]];
-        if (subIndex !== null) {
-          newVisibility[field][index] = [...prev[field][index]];
-          newVisibility[field][index][subIndex] = !prev[field][index][subIndex];
-        } else {
-          newVisibility[field][index] = !prev[field][index];
-        }
-      } else {
-        newVisibility[field] = !prev[field];
-      }
-      return newVisibility;
-    });
+  const openModal = (content) => {
+    setModalContent(content);
+    setVisible(true);
   };
 
-  const renderTileMenu = (field, index = null, subIndex = null) => (
-    <React.Fragment key={`${field}-${index}-${subIndex}`}>
-      <Menu
-        visible={
-          subIndex !== null
-            ? menuVisibility[field][index][subIndex]
-            : index !== null
-              ? menuVisibility[field][index]
-              : menuVisibility[field]
-        }
-        onDismiss={() => toggleMenu(field, index, subIndex)}
-        anchor={
-          <Button
-            onPress={() => toggleMenu(field, index, subIndex)}
-            mode="outlined"
-            style={{ marginBottom: 16 }}
-          >
-            <Text style={styles.mahjongTilesStyle}>
-              {subIndex !== null
-                ? formData[field][index][subIndex] || `　`
-                : index !== null
-                  ? formData[field][index] || `　`
-                  : formData[field] || `　`}
-            </Text>
-          </Button>
-        }
-      >
-        {mahjongTiles.map((emoji, emojiIndex) => (
-          <Menu.Item
-            key={`${field}-${index}-${subIndex}-${emojiIndex}`}
-            onPress={() => {
-              updateFormData(field, emoji, index, subIndex);
-              toggleMenu(field, index, subIndex);
-            }}
-            title={<Text style={styles.selectMahjongTilesStyle}>{emoji}</Text>}
-          />
-        ))}
-      </Menu>
-    </React.Fragment>
-  );
-
-  const renderRadioGroup = (field, options) => (
+  const createModalContent = (options, setter, currentValue, labels) => (
     <RadioButton.Group
-      onValueChange={(value) => updateFormData(field, value)}
-      value={formData[field]}
+      onValueChange={(value) => {
+        setter(value);
+        setVisible(false);
+      }}
+      value={currentValue}
     >
-      {options.map((option) => (
+      {options.map((option, index) => (
         <RadioButton.Item
-          key={option.value}
-          labelStyle={styles.textStyle}
-          {...option}
+          key={index}
+          label={labels[index]}
+          value={String(index)}
+          labelStyle={{ color: "black" }}
         />
       ))}
     </RadioButton.Group>
   );
 
-  const renderTileSection = (field, label, count) => (
+  const renderSelectableField = (title, value, setter, options, labels) => (
     <>
-      <Text style={styles.textStyle}>{label}</Text>
-      <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
-        {Array(count)
-          .fill(null)
-          .map((_, index) => renderTileMenu(field, index))}
-      </View>
+      <TouchableOpacity
+        onPress={() =>
+          openModal(createModalContent(options, setter, value, labels))
+        }
+      >
+        <Text style={styles.selectText}>
+          {title}: {labels[parseInt(value)]}
+        </Text>
+      </TouchableOpacity>
     </>
   );
 
+  const renderCheckboxItem = (label, value, setter) => (
+    <Checkbox.Item
+      label={label}
+      status={value ? "checked" : "unchecked"}
+      onPress={() => setter(!value)}
+      labelStyle={{ color: "black" }}
+    />
+  );
+
+  const renderTileImages = (tiles) => {
+    return generateImageUrls(tiles).map((url, index) => {
+      return (
+        <Image key={index} source={{ uri: url }} style={styles.tileImage} />
+      );
+    });
+  };
+
+  const renderTileSelection = (setter) => {
+    const tiles = [
+      "m1",
+      "m2",
+      "m3",
+      "m4",
+      "m5",
+      "m6",
+      "m7",
+      "m8",
+      "m9",
+      "p1",
+      "p2",
+      "p3",
+      "p4",
+      "p5",
+      "p6",
+      "p7",
+      "p8",
+      "p9",
+      "s1",
+      "s2",
+      "s3",
+      "s4",
+      "s5",
+      "s6",
+      "s7",
+      "s8",
+      "s9",
+      "z1",
+      "z2",
+      "z3",
+      "z4",
+      "z5",
+      "z6",
+      "z7",
+      "m0",
+      "p0",
+      "s0",
+    ];
+
+    return (
+      <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+        <View style={styles.handContainer}>
+          <Text style={styles.selectText}>手牌</Text>
+          <Text style={styles.selectText}>{shoupai}</Text>
+          <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+            {generateImageUrls(shoupai).map((url, index) => {
+              return (
+                <Image
+                  key={index}
+                  source={{ uri: url }}
+                  style={styles.tileImage}
+                />
+              );
+            })}
+          </View>
+        </View>
+        <View style={styles.tilesContainer}>
+          <Text style={styles.selectText}>牌</Text>
+          <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+            {tiles.map((tile, index) => {
+              return (
+                <TouchableOpacity
+                  key={index}
+                  onPress={() => {
+                    setter((prev) =>
+                      prev ? groupTiles(`${prev}${tile}`) : tile
+                    );
+                  }}
+                >
+                  <Image
+                    source={{ uri: `../assets/images/${tile}.png` }}
+                    style={styles.tileImage}
+                  />
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+        </View>
+      </View>
+    );
+  };
+
+  function groupTiles(tiles) {
+    const groups = { m: [], p: [], s: [], z: [] };
+
+    // 文字列を解析してグループに追加
+    let i = 0;
+    while (i < tiles.length) {
+      const group = tiles[i];
+      let j = i + 1;
+      while (j < tiles.length && !isNaN(tiles[j])) {
+        j++;
+      }
+      const numbers = tiles.slice(i + 1, j).split("");
+      if (groups[group]) {
+        groups[group].push(...numbers);
+      }
+      i = j;
+    }
+
+    // 各グループをソートして結合
+    let result = "";
+    for (const group of ["m", "p", "s", "z"]) {
+      if (groups[group].length > 0) {
+        groups[group].sort();
+        result += group + groups[group].join("");
+      }
+    }
+
+    return result;
+  }
+
+  function generateImageUrls(tiles) {
+    const groups = { m: [], p: [], s: [], z: [] };
+
+    // 文字列を解析してグループに追加
+    let i = 0;
+    while (i < tiles.length) {
+      const group = tiles[i];
+      let j = i + 1;
+      while (j < tiles.length && !isNaN(tiles[j])) {
+        j++;
+      }
+      const numbers = tiles.slice(i + 1, j).split("");
+      if (groups[group]) {
+        groups[group].push(...numbers);
+      }
+      i = j;
+    }
+
+    // 画像URLを生成
+    const urls = [];
+    for (const group in groups) {
+      groups[group].forEach((number) => {
+        urls.push(`../assets/images/${group}${number}.png`);
+      });
+    }
+
+    return urls;
+  }
+
+  const styles = StyleSheet.create({
+    container: {
+      flex: 1,
+    },
+    scrollView: {
+      flexGrow: 1,
+    },
+    form: {
+      padding: 16,
+    },
+    selectText: {
+      fontSize: 24,
+      color: "black",
+    },
+    textInput: {
+      backgroundColor: "white", // 背景色を白に設定
+      borderColor: "black", // 枠の色を黒に設定
+      borderWidth: 1, // 枠の幅を設定
+      color: "black", // 文字の色を黒に設定
+    },
+    modalView: {
+      margin: 20,
+      backgroundColor: "white",
+      borderRadius: 20,
+      padding: 35,
+      alignItems: "center",
+      shadowColor: "#000",
+      shadowOffset: {
+        width: 0,
+        height: 2,
+      },
+      shadowOpacity: 0.25,
+      shadowRadius: 4,
+      elevation: 5,
+    },
+    button: {
+      borderRadius: 20,
+      padding: 10,
+      elevation: 2,
+    },
+    buttonOpen: {
+      backgroundColor: "#F194FF",
+    },
+    buttonClose: {
+      backgroundColor: "#2196F3",
+    },
+    textStyle: {
+      color: "white",
+      fontWeight: "bold",
+      textAlign: "center",
+    },
+    modalText: {
+      marginBottom: 15,
+      textAlign: "center",
+    },
+    tileImage: {
+      width: 40,
+      height: 60,
+      margin: 2,
+    },
+    handContainer: {
+      borderWidth: 1,
+      borderColor: "black",
+      padding: 10,
+      margin: 5,
+      flexWrap: "wrap",
+      maxWidth: "100%",
+    },
+    tilesContainer: {
+      borderWidth: 1,
+      borderColor: "black",
+      padding: 10,
+      margin: 5,
+      flexWrap: "wrap",
+      maxWidth: "100%",
+    },
+  });
+
   return (
     <Provider>
-      <ScrollView>
-        <View style={{ padding: 16 }}>
-          <Title style={styles.textStyle}>麻雀点数計算フォーム</Title>
-          <Text style={styles.textStyle}>自風</Text>
-          {renderRadioGroup(
-            "wind",
-            winds.map((wind) => ({ label: wind, value: wind }))
-          )}
-          <TextInput
-            label="局"
-            value={formData.round}
-            onChangeText={(value) => updateFormData("round", value)}
-            mode="outlined"
-            style={{ marginBottom: 16, backgroundColor: "white" }}
-            keyboardType="numeric"
-          />
-          {renderTileSection("dora", "ドラ表示牌", 4)}
-          {renderTileSection("uraDora", "裏ドラ表示牌", 4)}
-          <Text style={styles.textStyle}>立直の有無</Text>
-          {renderRadioGroup("riichi", riichiOptions)}
-          <Text style={styles.textStyle}>ツモかロンの選択</Text>
-          {renderRadioGroup("winType", winTypes)}
-          <Text style={styles.textStyle}>特殊アガリ</Text>
-          {specialWins.map((win) => (
-            <Checkbox.Item
-              key={win}
-              label={win}
-              labelStyle={styles.textStyle}
-              status={
-                formData.specialWin.includes(win) ? "checked" : "unchecked"
-              }
-              onPress={() => {
-                const newSpecialWin = formData.specialWin.includes(win)
-                  ? formData.specialWin.filter((item) => item !== win)
-                  : [...formData.specialWin, win];
-                updateFormData("specialWin", newSpecialWin);
-              }}
+      <SafeAreaView style={styles.container}>
+        <ScrollView contentContainerStyle={styles.scrollView}>
+          <View style={styles.form}>
+            {renderSelectableField(
+              "場風",
+              zhuangfeng,
+              setZhuangfeng,
+              ["0", "1", "2", "3"],
+              ["東", "南", "西", "北"]
+            )}
+            {renderSelectableField(
+              "自風",
+              menfeng,
+              setMenfeng,
+              ["0", "1", "2", "3"],
+              ["東", "南", "西", "北"]
+            )}
+            {renderSelectableField(
+              "リーチ",
+              lizhi,
+              setLizhi,
+              ["0", "1", "2"],
+              ["リーチなし", "リーチ", "ダブルリーチ"]
+            )}
+
+            {renderCheckboxItem("リーチ一発", yifa, setYifa)}
+            {renderCheckboxItem("槍槓", qianggang, setQianggang)}
+            {renderCheckboxItem("嶺上開花", lingshang, setLingshang)}
+
+            {renderSelectableField(
+              "海底撈月",
+              haidi,
+              setHaidi,
+              ["0", "1", "2"],
+              ["ハイテイなし", "ハイテイツモ", "ハイテイロン"]
+            )}
+            {renderSelectableField(
+              "天和/地和",
+              tianhu,
+              setTianhu,
+              ["0", "1", "2"],
+              ["天和/地和なし", "天和", "地和"]
+            )}
+
+            <TextInput
+              label="ドラ"
+              value={baopai}
+              onChangeText={(text) => setBaopai(text)}
+              placeholder="例: m1,p2,s3,z4"
+              style={styles.textInput}
+              contentStyle={{ color: "black" }}
             />
-          ))}
-          <TextInput
-            label="本場"
-            value={formData.honba}
-            onChangeText={(value) => updateFormData("honba", value)}
-            mode="outlined"
-            style={{ marginBottom: 16, backgroundColor: "white" }}
-            keyboardType="numeric"
-          />
-          {renderTileSection("handTiles", "手牌", 13)}
-          <Text style={styles.textStyle}>アガリ牌</Text>
-          {renderTileMenu("winningTile")}
-          <Text style={styles.textStyle}>鳴き牌</Text>
-          {formData.melds.map((_, meldIndex) => (
-            <View
-              key={`meld-${meldIndex}`}
-              style={{ flexDirection: "row", flexWrap: "wrap" }}
+            <TextInput
+              label="裏ドラ"
+              value={fubaopai}
+              onChangeText={(text) => setFubaopai(text)}
+              placeholder="例: m1,p2,s3,z4"
+              style={styles.textInput}
+              contentStyle={{ color: "black" }}
+            />
+            <TextInput
+              label="本場"
+              value={changbang}
+              onChangeText={(text) => setChangbang(text)}
+              keyboardType="numeric"
+              style={styles.textInput}
+              contentStyle={{ color: "black" }}
+            />
+            <TextInput
+              label="リーチ棒"
+              value={lizhibang}
+              onChangeText={(text) => setLizhibang(text)}
+              keyboardType="numeric"
+              style={styles.textInput}
+              contentStyle={{ color: "black" }}
+            />
+
+            <TouchableOpacity
+              onPress={() =>
+                openModal(
+                  <View>
+                    <Text style={styles.modalText}>手牌を選択してください</Text>
+                    {renderTileSelection(setShoupai)}
+                  </View>
+                )
+              }
             >
-              {Array(3)
-                .fill(null)
-                .map((_, tileIndex) =>
-                  renderTileMenu("melds", meldIndex, tileIndex)
-                )}
-            </View>
-          ))}
-          <Button
-            mode="contained"
-            onPress={() => console.log(formData)}
-            style={{ marginTop: 16 }}
+              <Text style={styles.selectText}>手牌: {shoupai}</Text>
+              <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+                {renderTileImages(shoupai)}
+              </View>
+            </TouchableOpacity>
+
+            {/* {naki.map((nakiPai, index) => (
+              <TouchableOpacity
+                key={index}
+                onPress={() =>
+                  openModal(
+                    <View>
+                      <Text style={styles.modalText}>
+                        鳴き牌 {index + 1} を選択してください
+                      </Text>
+                      {renderTileSelection((text) => {
+                        const newNaki = [...naki];
+                        newNaki[index] = text;
+                        setNaki(newNaki);
+                      })}
+                    </View>
+                  )
+                }
+              >
+                <Text style={styles.selectText}>
+                  鳴き牌 {index + 1}: {nakiPai}
+                </Text>
+                <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+                  {renderTileImages(nakiPai)}
+                </View>
+              </TouchableOpacity>
+            ))} */}
+
+            <Button
+              mode="contained"
+              onPress={handleCalculate}
+              style={{ marginTop: 16 }}
+            >
+              計算
+            </Button>
+          </View>
+        </ScrollView>
+        <Portal>
+          <Modal
+            visible={visible}
+            onDismiss={() => setVisible(false)}
+            contentContainerStyle={styles.modalView}
           >
-            計算
-          </Button>
-        </View>
-      </ScrollView>
+            {modalContent}
+            <Button
+              mode="contained"
+              onPress={() => setVisible(false)}
+              style={{ marginTop: 16 }}
+            >
+              閉じる
+            </Button>
+          </Modal>
+        </Portal>
+      </SafeAreaView>
     </Provider>
   );
-};
-
-export default MahjongForm;
+}

@@ -4,5 +4,6 @@
   "bracketSameLine": false,
   "jsxBracketSameLine": false,
   "usePrettierrc": false,
-  "trailingComma": "es5"
+  "trailingComma": "es5",
+  "endOfLine": "lf"
 }
