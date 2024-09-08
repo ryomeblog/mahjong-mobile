@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   SafeAreaView,
   ScrollView,
@@ -9,7 +9,7 @@ import {
   Image,
 } from "react-native";
 import {
-  TextInput,
+  // TextInput,
   Button,
   RadioButton,
   Checkbox,
@@ -17,6 +17,7 @@ import {
   Portal,
   Provider,
 } from "react-native-paper";
+import Majiang from "@kobalab/majiang-core";
 
 export default function App() {
   const [zhuangfeng, setZhuangfeng] = useState("0");
@@ -30,45 +31,126 @@ export default function App() {
   const [tianhu, setTianhu] = useState("0");
   const [baopai, setBaopai] = useState([]);
   const [fubaopai, setFubaopai] = useState([]);
-  const [changbang, setChangbang] = useState("0");
-  const [lizhibang, setLizhibang] = useState("0");
+  // const [changbang, setChangbang] = useState("0");
+  // const [lizhibang, setLizhibang] = useState("0");
   const [shoupai, setShoupai] = useState("");
   const [rongpai, setRongpai] = useState("");
   const [naki1, setNaki1] = useState("");
   const [naki2, setNaki2] = useState("");
   const [naki3, setNaki3] = useState("");
   const [naki4, setNaki4] = useState("");
+  const [huluView, setHuluView] = useState(null);
 
   const [visible, setVisible] = useState(false);
   const [modalContent, setModalContent] = useState(null);
 
+  const [visibleNaki, setVisibleNaki] = useState(false);
+  const [modalContentNaki, setModalContentNaki] = useState(null);
+
+  const [visibleHulu, setVisibleHulu] = useState(false);
+
   const handleCalculate = () => {
+    // const data = {
+    //   zhuangfeng,
+    //   menfeng,
+    //   lizhi,
+    //   tsumo,
+    //   yifa,
+    //   qianggang,
+    //   lingshang,
+    //   haidi,
+    //   tianhu,
+    //   baopai,
+    //   fubaopai,
+    //   // changbang: parseInt(changbang, 10),
+    //   // lizhibang: parseInt(lizhibang, 10),
+    //   shoupai,
+    //   naki1,
+    //   naki2,
+    //   naki3,
+    //   naki4,
+    // };
+
+    let shoupaiAndNaki = tsumo ? groupTiles(shoupai + rongpai) : shoupai;
+    const nakis = [naki1, naki2, naki3, naki4].filter((naki) => naki);
+    if (nakis.length > 0) {
+      shoupaiAndNaki += (shoupaiAndNaki ? "," : "") + nakis.join(",");
+    }
+
     const data = {
-      zhuangfeng,
-      menfeng,
-      lizhi,
-      yifa,
-      qianggang,
-      lingshang,
-      haidi,
-      tianhu,
-      baopai,
-      fubaopai,
-      changbang: parseInt(changbang, 10),
-      lizhibang: parseInt(lizhibang, 10),
-      shoupai,
-      naki1,
-      naki2,
-      naki3,
-      naki4,
+      shoupaiAndNaki: shoupaiAndNaki,
+      rongpai: tsumo ? null : rongpai,
+      rule: Majiang.rule(),
+      zhuangfeng: parseInt(zhuangfeng), // 場風（0: 東、1: 南、2: 西、3: 北）
+      menfeng: parseInt(menfeng), // 自風（0: 東、1: 南、2: 西、3: 北）
+      hupai: {
+        lizhi: parseInt(lizhi), // 0: リーチなし、1: リーチ、2: ダブルリーチ
+        yifa: yifa, // リーチ一発のとき true
+        qianggang: qianggang, // 槍槓のとき true
+        lingshang: lingshang, // 嶺上開花のとき true
+        haidi: parseInt(haidi), // 海底撈月（0: ハイテイなし、1: ハイテイツモ、2: ハイテイロン）
+        tianhu: parseInt(tianhu), // 天和/地和（0: 天和/地和なし、1: 天和、2: 地和）
+      },
+      baopai: baopai, // ドラ表示
+      fubaopai: fubaopai, // 裏ドラ
+      jicun: {
+        changbang: 0, // 本場
+        lizhibang: 0, // リーチ棒
+      },
     };
     console.log(data);
     console.log(JSON.stringify(data));
+
+    const hule = Majiang.Util.hule(
+      Majiang.Shoupai.fromString(shoupaiAndNaki),
+      tsumo ? null : rongpai,
+      Majiang.Util.hule_param({
+        rule: Majiang.rule(),
+        zhuangfeng: zhuangfeng, // 場風（0: 東、1: 南、2: 西、3: 北）
+        menfeng: menfeng, // 自風（0: 東、1: 南、2: 西、3: 北）
+        hupai: {
+          lizhi: lizhi, // 0: リーチなし、1: リーチ、2: ダブルリーチ
+          yifa: yifa, // リーチ一発のとき true
+          qianggang: qianggang, // 槍槓のとき true
+          lingshang: lingshang, // 嶺上開花のとき true
+          haidi: haidi, // 海底撈月（0: ハイテイなし、1: ハイテイツモ、2: ハイテイロン）
+          tianhu: tianhu, // 天和/地和（0: 天和/地和なし、1: 天和、2: 地和）
+        },
+        baopai: baopai, // ドラ表示
+        fubaopai: fubaopai, // 裏ドラ
+        jicun: {
+          changbang: 0, // 本場
+          lizhibang: 0, // リーチ棒
+        },
+      })
+    );
+    console.log("hule:", hule);
+    if (hule) {
+      setHuluView(hule);
+      openHuluModal();
+    }
   };
 
   const openModal = (content) => {
     setModalContent(content);
     setVisible(true);
+  };
+
+  const openNakiModal = (content) => {
+    setModalContentNaki(content);
+    setVisible(false);
+    setVisibleNaki(true);
+  };
+
+  const openHuluModal = () => {
+    setVisible(false);
+    setVisibleNaki(false);
+    setVisibleHulu(true);
+  };
+
+  const closeNakiModal = () => {
+    setVisible(false);
+    setVisibleNaki(false);
   };
 
   const createModalContent = (options, setter, currentValue, labels) => (
@@ -104,6 +186,43 @@ export default function App() {
     </>
   );
 
+  const renderSelectableNakiField = (tiles, setter) => {
+    const tilesPatterns = generatePatterns(tiles);
+    return (
+      <>
+        {tilesPatterns.map((tilesPattern) => {
+          return (
+            <TouchableOpacity
+              onPress={() => {
+                setter(tilesPattern);
+                closeNakiModal();
+              }}
+            >
+              <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+                {generateTileAndImageUrls(tilesPattern).map(
+                  (tileAndUrls, index) => {
+                    return (
+                      <Image
+                        key={index}
+                        source={{ uri: tileAndUrls.imageUrl }}
+                        style={[
+                          styles.tileImage,
+                          tileAndUrls.yoko && {
+                            transform: [{ rotate: "90deg" }],
+                          },
+                        ]}
+                      />
+                    );
+                  }
+                )}
+              </View>
+            </TouchableOpacity>
+          );
+        })}
+      </>
+    );
+  };
+
   const renderCheckboxItem = (label, value, setter) => (
     <Checkbox.Item
       label={label}
@@ -119,7 +238,12 @@ export default function App() {
         <Image
           key={index}
           source={{ uri: tileAndUrls.imageUrl }}
-          style={styles.tileImage}
+          style={[
+            styles.tileImage,
+            tileAndUrls.yoko && {
+              transform: [{ rotate: "90deg" }],
+            },
+          ]}
         />
       );
     });
@@ -132,14 +256,19 @@ export default function App() {
           <Image
             key={index}
             source={{ uri: tileAndUrls.imageUrl }}
-            style={styles.tileImage}
+            style={[
+              styles.tileImage,
+              tileAndUrls.yoko && {
+                transform: [{ rotate: "90deg" }],
+              },
+            ]}
           />
         );
       }
     );
   };
 
-  const renderTileSelection = (setter) => {
+  const renderTileSelection = (selectTiles, setter) => {
     const tiles = [
       "m1",
       "m2",
@@ -182,10 +311,10 @@ export default function App() {
     return (
       <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
         <View style={styles.handContainer}>
-          <Text style={styles.selectText}>手牌</Text>
-          <Text style={styles.selectText}>{shoupai}</Text>
+          <Text style={styles.selectText}>手牌{selectTiles}</Text>
+          <Text style={styles.selectText}>{selectTiles}</Text>
           <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
-            {generateTileAndImageUrls(shoupai).map((tileAndUrls, index) => {
+            {generateTileAndImageUrls(selectTiles).map((tileAndUrls, index) => {
               return (
                 <TouchableOpacity
                   key={index}
@@ -198,7 +327,12 @@ export default function App() {
                   <Image
                     key={index}
                     source={{ uri: tileAndUrls.imageUrl }}
-                    style={styles.tileImage}
+                    style={[
+                      styles.tileImage,
+                      tileAndUrls.yoko && {
+                        transform: [{ rotate: "90deg" }],
+                      },
+                    ]}
                   />
                 </TouchableOpacity>
               );
@@ -231,7 +365,7 @@ export default function App() {
     );
   };
 
-  const renderDraSelection = (setter) => {
+  const renderDraSelection = (doraTile, setter) => {
     const tiles = [
       "m1",
       "m2",
@@ -275,31 +409,42 @@ export default function App() {
     return (
       <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
         <View style={styles.handContainer}>
-          <Text style={styles.selectText}>手牌</Text>
-          <Text style={styles.selectText}>{shoupai}</Text>
+          <Text style={styles.selectText}>ドラ</Text>
+          <Text style={styles.selectText}>{doraTile}</Text>
+
           <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
-            {generateTileAndImageUrls(shoupai).map((tileAndUrls, index) => {
-              return (
-                <TouchableOpacity
-                  key={index}
-                  onPress={() => {
-                    setter((prev) => {
-                      if (prev) return prev;
-                      const removeIndex = prev.indexOf(tileAndUrls.tile);
-                      if (removeIndex !== -1)
-                        return prev.splice(removeIndex, 1);
-                      return prev;
-                    });
-                  }}
-                >
-                  <Image
+            {generateTileAndImageUrls(groupTiles(doraTile.join(""))).map(
+              (tileAndUrls, index) => {
+                return (
+                  <TouchableOpacity
                     key={index}
-                    source={{ uri: tileAndUrls.imageUrl }}
-                    style={styles.tileImage}
-                  />
-                </TouchableOpacity>
-              );
-            })}
+                    onPress={() => {
+                      setter((prev) => {
+                        if (!prev) return prev;
+                        const removeIndex = prev.indexOf(tileAndUrls.tile);
+                        console.log("removeIndex", removeIndex);
+                        console.log("tileAndUrls.tile", tileAndUrls.tile);
+                        if (removeIndex === 0) return [];
+                        if (removeIndex !== -1)
+                          return prev.splice(removeIndex, 1);
+                        return prev;
+                      });
+                    }}
+                  >
+                    <Image
+                      key={index}
+                      source={{ uri: tileAndUrls.imageUrl }}
+                      style={[
+                        styles.tileImage,
+                        tileAndUrls.yoko && {
+                          transform: [{ rotate: "90deg" }],
+                        },
+                      ]}
+                    />
+                  </TouchableOpacity>
+                );
+              }
+            )}
           </View>
         </View>
         <View style={styles.tilesContainer}>
@@ -326,7 +471,7 @@ export default function App() {
     );
   };
 
-  const renderNakiSelection = (setter) => {
+  const renderNakiSelection = (naki, setter) => {
     const tiles = [
       "m1",
       "m2",
@@ -366,26 +511,31 @@ export default function App() {
       "p0",
       "s0",
     ];
+    let nakiTile = naki;
     return (
       <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
         <View style={styles.handContainer}>
           <Text style={styles.selectText}>鳴き牌</Text>
-          <Text style={styles.selectText}>{shoupai}</Text>
+          <Text style={styles.selectText}>{nakiTile}</Text>
           <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
-            {generateTileAndImageUrls(shoupai).map((tileAndUrls, index) => {
+            {generateTileAndImageUrls(nakiTile).map((tileAndUrls, index) => {
               return (
                 <TouchableOpacity
                   key={index}
                   onPress={() => {
-                    setter((prev) =>
-                      prev ? removeTile(prev, tileAndUrls.tile) : ""
-                    );
+                    setter("");
+                    closeNakiModal();
                   }}
                 >
                   <Image
                     key={index}
                     source={{ uri: tileAndUrls.imageUrl }}
-                    style={styles.tileImage}
+                    style={[
+                      styles.tileImage,
+                      tileAndUrls.yoko && {
+                        transform: [{ rotate: "90deg" }],
+                      },
+                    ]}
                   />
                 </TouchableOpacity>
               );
@@ -400,13 +550,9 @@ export default function App() {
                 <TouchableOpacity
                   key={index}
                   onPress={() => {
-                    setter((prev) =>
-                      prev
-                        ? prev.length === 3
-                          ? groupTiles(`${prev}${tile}`) + "-"
-                          : groupTiles(`${prev}${tile}`)
-                        : tile
-                    );
+                    nakiTile = nakiTile
+                      ? groupTiles(`${nakiTile}${tile}`)
+                      : tile;
                   }}
                 >
                   <Image
@@ -418,9 +564,97 @@ export default function App() {
             })}
           </View>
         </View>
+
+        <Button
+          mode="contained"
+          onPress={() =>
+            openNakiModal(
+              <View>
+                <Text style={styles.modalText}>
+                  鳴き牌の組み合わせを選択してください
+                </Text>
+                {renderSelectableNakiField(nakiTile, setter)}
+              </View>
+            )
+          }
+          style={{ marginTop: 16, width: "100%" }}
+        >
+          選択
+        </Button>
       </View>
     );
   };
+
+  function isPonOrChi(tiles) {
+    const group = tiles[0];
+    const numbers = tiles.slice(1).split("").map(Number);
+
+    // ポンの判定
+    const isPon = numbers.every((num) => num === numbers[0]);
+
+    // チーの判定
+    const isChi =
+      numbers.length === 3 &&
+      numbers[0] + 1 === numbers[1] &&
+      numbers[1] + 1 === numbers[2];
+
+    if (group === "z") {
+      return isPon ? "Pon" : "No";
+    } else {
+      if (isPon) {
+        return "Pon";
+      } else if (isChi) {
+        return "Chi";
+      } else {
+        return "No";
+      }
+    }
+  }
+
+  function generatePatterns(input) {
+    const resultType = isPonOrChi(input);
+    let results = [];
+
+    if (resultType === "Pon") {
+      results = generatePonPatterns(input);
+    } else if (resultType === "Chi") {
+      results = generateChiPatterns(input);
+    }
+    console.log("resultType", resultType);
+    console.log("results", results);
+
+    return results;
+  }
+
+  function generateChiPatterns(input) {
+    const prefix = input[0];
+    const numbers = input.slice(1).split("");
+    const results = [];
+
+    for (let i = 0; i < numbers.length; i++) {
+      const firstNum = numbers[i];
+      const restNums = numbers.slice(0, i).concat(numbers.slice(i + 1));
+      const newPattern = [...restNums];
+      newPattern.splice(0, 0, "-");
+      results.push(prefix + firstNum + newPattern.join(""));
+    }
+
+    return results;
+  }
+
+  function generatePonPatterns(input) {
+    const prefix = input[0];
+    const numbers = input.slice(1).split(""); // numbersを配列に変換
+    const results = [];
+
+    results.push(
+      `${prefix}${numbers[0]}-${numbers.slice(1).join("")}`,
+      `${prefix}${numbers.slice(0, 2).join("")}=${numbers.slice(2).join("")}`,
+      `${prefix}${numbers.join("")}+`
+    );
+
+    return results;
+  }
 
   function removeTile(tiles, tile) {
     const group = tile[0]; // グループを判断するための先頭文字
@@ -487,35 +721,35 @@ export default function App() {
   }
 
   function generateTileAndImageUrls(tiles) {
-    const groups = { m: [], p: [], s: [], z: [] };
+    const result = [];
+    const groups = tiles.match(/[mpsz][0-9\-=+]+/g);
 
-    // 文字列を解析してグループに追加
-    let i = 0;
-    while (i < tiles.length) {
-      const group = tiles[i];
-      let j = i + 1;
-      while (j < tiles.length && !isNaN(tiles[j])) {
-        j++;
-      }
-      const numbers = tiles.slice(i + 1, j).split("");
-      if (groups[group]) {
-        groups[group].push(...numbers);
-      }
-      i = j;
-    }
+    if (!groups) return result;
 
-    // 画像URLを生成
-    const tileAndUrls = [];
-    for (const group in groups) {
-      groups[group].forEach((number) => {
-        tileAndUrls.push({
-          tile: `${group}${number}`,
-          imageUrl: `../assets/images/${group}${number}.png`,
-        });
+    groups.forEach((group) => {
+      const type = group[0];
+      const numbers = group.slice(1).match(/[0-9]+|[-+=]/g);
+
+      if (!numbers) return;
+
+      numbers.forEach((item, index) => {
+        if (item === "-" || item === "+" || item === "=") {
+          if (index > 0 && !isNaN(numbers[index - 1])) {
+            result[result.length - 1].yoko = true;
+          }
+        } else {
+          for (let i = 0; i < item.length; i++) {
+            result.push({
+              yoko: false,
+              tile: `${type}${item[i]}`,
+              imageUrl: `../assets/images/${type}${item[i]}.png`,
+            });
+          }
+        }
       });
-    }
+    });
 
-    return tileAndUrls;
+    return result;
   }
 
   const styles = StyleSheet.create({
@@ -530,6 +764,10 @@ export default function App() {
     },
     selectText: {
       fontSize: 24,
+      color: "black",
+    },
+    defenText: {
+      fontSize: 40,
       color: "black",
     },
     textInput: {
@@ -572,10 +810,11 @@ export default function App() {
     modalText: {
       marginBottom: 15,
       textAlign: "center",
+      color: "black",
     },
     tileImage: {
-      width: 40,
-      height: 60,
+      width: 37,
+      height: 55,
       margin: 2,
     },
     handContainer: {
@@ -647,7 +886,7 @@ export default function App() {
                 openModal(
                   <View>
                     <Text style={styles.modalText}>ドラを選択してください</Text>
-                    {renderDraSelection(setBaopai)}
+                    {renderDraSelection(baopai, setBaopai)}
                   </View>
                 )
               }
@@ -665,7 +904,7 @@ export default function App() {
                     <Text style={styles.modalText}>
                       裏ドラを選択してください
                     </Text>
-                    {renderDraSelection(setFubaopai)}
+                    {renderDraSelection(fubaopai, setFubaopai)}
                   </View>
                 )
               }
@@ -681,7 +920,7 @@ export default function App() {
                 openModal(
                   <View>
                     <Text style={styles.modalText}>手牌を選択してください</Text>
-                    {renderTileSelection(setShoupai)}
+                    {renderTileSelection(shoupai, setShoupai)}
                   </View>
                 )
               }
@@ -699,7 +938,7 @@ export default function App() {
                     <Text style={styles.modalText}>
                       鳴き牌1を選択してください
                     </Text>
-                    {renderNakiSelection(setNaki1)}
+                    {renderNakiSelection(naki1, setNaki1)}
                   </View>
                 )
               }
@@ -718,7 +957,7 @@ export default function App() {
                       <Text style={styles.modalText}>
                         鳴き牌2を選択してください
                       </Text>
-                      {renderNakiSelection(setNaki2)}
+                      {renderNakiSelection(naki2, setNaki2)}
                     </View>
                   )
                 }
@@ -738,7 +977,7 @@ export default function App() {
                       <Text style={styles.modalText}>
                         鳴き牌3を選択してください
                       </Text>
-                      {renderNakiSelection(setNaki3)}
+                      {renderNakiSelection(naki3, setNaki3)}
                     </View>
                   )
                 }
@@ -758,12 +997,12 @@ export default function App() {
                       <Text style={styles.modalText}>
                         鳴き牌4を選択してください
                       </Text>
-                      {renderNakiSelection(setNaki4)}
+                      {renderNakiSelection(naki4, setNaki4)}
                     </View>
                   )
                 }
               >
-                <Text style={styles.selectText}>鳴き牌5: {naki5}</Text>
+                <Text style={styles.selectText}>鳴き牌4: {naki4}</Text>
                 <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
                   {renderTileImages(naki4)}
                 </View>
@@ -777,7 +1016,7 @@ export default function App() {
                     <Text style={styles.modalText}>
                       アガリ牌を選択してください
                     </Text>
-                    {renderTileSelection(setRongpai)}
+                    {renderTileSelection(rongpai, setRongpai)}
                   </View>
                 )
               }
@@ -788,7 +1027,7 @@ export default function App() {
               </View>
             </TouchableOpacity>
 
-            <TextInput
+            {/* <TextInput
               label="本場"
               value={changbang}
               onChangeText={(text) => setChangbang(text)}
@@ -803,7 +1042,7 @@ export default function App() {
               keyboardType="numeric"
               style={styles.textInput}
               contentStyle={{ color: "black" }}
-            />
+            /> */}
 
             <Button
               mode="contained"
@@ -824,6 +1063,53 @@ export default function App() {
             <Button
               mode="contained"
               onPress={() => setVisible(false)}
+              style={{ marginTop: 16 }}
+            >
+              閉じる
+            </Button>
+          </Modal>
+        </Portal>
+
+        <Portal>
+          <Modal
+            visible={visibleNaki}
+            onDismiss={() => setVisibleNaki(false)}
+            contentContainerStyle={styles.modalView}
+          >
+            {modalContentNaki}
+            <Button
+              mode="contained"
+              onPress={() => setVisibleNaki(false)}
+              style={{ marginTop: 16 }}
+            >
+              閉じる
+            </Button>
+          </Modal>
+        </Portal>
+
+        <Portal>
+          <Modal
+            visible={visibleHulu}
+            onDismiss={() => setVisibleHulu(false)}
+            contentContainerStyle={styles.modalView}
+          >
+            <View style={styles.container}>
+              {huluView &&
+                huluView.hupai.map((value) => (
+                  <Text style={styles.selectText} key={value.name}>
+                    {value.name}：{value.fanshu}飜
+                  </Text>
+                ))}
+              {huluView && (
+                <Text style={styles.selectText}>{huluView.fu}符</Text>
+              )}
+              {huluView && (
+                <Text style={styles.defenText}>{huluView.defen}点</Text>
+              )}
+            </View>
+            <Button
+              mode="contained"
+              onPress={() => setVisibleHulu(false)}
               style={{ marginTop: 16 }}
             >
               閉じる
